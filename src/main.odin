@@ -13,6 +13,8 @@ import "../odin-imgui/imgui_impl_sdl2"
 import "../odin-imgui/imgui_impl_opengl3"
 
 
+lightPos: [3]f32 = {1.2, 1.0, 2.0}
+lightDiffuse: [3]f32 = {300, 300, 92}
 
 main :: proc() {
     WINDOW_WIDTH  :: 1280
@@ -76,6 +78,7 @@ main :: proc() {
     
 
     cube := graphics.load_mesh_as_cube("textures/a.png")
+    sprite := graphics.new_sprite(graphics.load_texture("textures/a.png"), glm.vec3{2.0, 2.0, 2.0}, glm.vec2{100, 100}, glm.vec3{0, 0, 0}, glm.vec4{1.0, 1.0, 1.0, 1.0})
     
     
     gl.UseProgram(program)
@@ -89,6 +92,9 @@ main :: proc() {
 
     gl.Uniform3f(uniforms["world_color"].location, 1.0, 1.0, 1.0)
     gl.Uniform1f(uniforms["modelTexture"].location, 0)
+
+    gl.Uniform3f(uniforms["light1.position"].location, lightPos[0], lightPos[1], lightPos[2])
+    gl.Uniform3f(uniforms["light1.diffuse"].location, lightDiffuse[0], lightDiffuse[1], lightDiffuse[2])
 
     last_mouse_position: glm.vec2
     camera := graphics.new_camera(
@@ -136,6 +142,7 @@ main :: proc() {
                     last_mouse_position = glm.vec2{f32(event.motion.x), f32(event.motion.y)}
                     graphics.modify_camera_direction(&camera, offsetX, offsetY)
                 }
+                update_camera(camera, uniforms)
                 break
             }
 		}
@@ -144,15 +151,19 @@ main :: proc() {
            
             if sdl.GetKeyboardState(nil)[sdl.SCANCODE_W] != 0 {
                 camera.position += camera.front * 0.01
+                update_camera(camera, uniforms)
             }
             if sdl.GetKeyboardState(nil)[sdl.SCANCODE_S] != 0 {
                 camera.position -= camera.front * 0.01
+                update_camera(camera, uniforms)
             }
             if sdl.GetKeyboardState(nil)[sdl.SCANCODE_A] != 0 {
                 camera.position -= glm.normalize(glm.cross(camera.front, camera.up)) * 0.01
+                update_camera(camera, uniforms)
             }
             if sdl.GetKeyboardState(nil)[sdl.SCANCODE_D] != 0 {
                 camera.position += glm.normalize(glm.cross(camera.front, camera.up)) * 0.01
+                update_camera(camera, uniforms)
             }
 
         }
@@ -183,18 +194,19 @@ main :: proc() {
         uModel := graphics.get_mesh_model(cube)
         gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
 
-        uView := graphics.get_camera_view(camera)
-        gl.UniformMatrix4fv(uniforms["uView"].location, 1, false, &uView[0, 0])
-
-        camProj := graphics.get_camera_projection(camera)
-        gl.UniformMatrix4fv(uniforms["uProjection"].location, 1, false, &camProj[0, 0])  
-
-        viewPos := camera.position
-        gl.Uniform3f(uniforms["viewPos"].location, viewPos.x, viewPos.y, viewPos.z)
+        gl.Uniform3f(uniforms["light1.position"].location, lightPos[0], lightPos[1], lightPos[2])
+        gl.Uniform3f(uniforms["light1.diffuse"].location, lightDiffuse[0], lightDiffuse[1], lightDiffuse[2])
 
         
         graphics.draw_mesh(cube)
+
+        uModel = graphics.get_sprite_model(sprite)
+
+        gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
+
+        graphics.draw_sprite(sprite)
         
+
 		
         imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
         when imgui.IMGUI_BRANCH == "docking" {
@@ -248,6 +260,22 @@ debug_window :: proc() {
     imgui.Begin("Debug", nil, flags)
     imgui.Text("Scene: Demo Scene")
     imgui.Separator()
+
+
+    imgui.DragFloat3("Light Position", &lightPos)
+    imgui.DragFloat3("Light Diffuse", &lightDiffuse)
     
     imgui.End()
+}
+
+
+update_camera :: proc(camera: graphics.Camera, uniforms: gl.Uniforms) {
+    uView := graphics.get_camera_view(camera)
+    gl.UniformMatrix4fv(uniforms["uView"].location, 1, false, &uView[0, 0])
+
+    camProj := graphics.get_camera_projection(camera)
+    gl.UniformMatrix4fv(uniforms["uProjection"].location, 1, false, &camProj[0, 0])  
+
+    viewPos := camera.position
+    gl.Uniform3f(uniforms["viewPos"].location, viewPos.x, viewPos.y, viewPos.z) 
 }

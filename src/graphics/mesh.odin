@@ -11,12 +11,6 @@ Vertex :: struct {
     texcoord: glm.vec2,
 }
 
-Texture :: struct {
-    data: [^]u8,
-    x, y, channels: i32,
-    gl_handle: u32,
-}
-
 Mesh :: struct {
     pos: glm.vec3,
     rot: glm.vec3,
@@ -30,33 +24,6 @@ Mesh :: struct {
 
 get_mesh_model :: proc(mesh: Mesh) -> glm.mat4x4 {
     return glm.identity(glm.mat4x4) * glm.mat4Rotate(glm.vec3{1.0, 0.0, 0.0}, mesh.rot.x) * glm.mat4Rotate(glm.vec3{0.0, 1.0, 0.0}, mesh.rot.y) * glm.mat4Rotate(glm.vec3{0.0, 0.0, 1.0}, mesh.rot.z) * glm.mat4Scale(mesh.scale) * glm.mat4Translate(mesh.pos)
-}
-
-load_texture :: proc(texturePath: cstring) -> (texture: Texture) {
-    texture.data = stb.load(texturePath, &texture.x, &texture.y, &texture.channels, 0)
-    if texture.data == nil {
-        fmt.printf("Failed to load texture: %s\n", texturePath)
-        return texture
-    }
-    fmt.println("Loaded texture: ", texturePath)
-    fmt.printf("x: %d, y: %d, channels: %d\n", texture.x, texture.y, texture.channels)
-    
-    gl.GenTextures(1, &texture.gl_handle)
-    gl.BindTexture(gl.TEXTURE_2D, texture.gl_handle)
-    
-    gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.x, texture.y, 0, gl.RGBA, gl.UNSIGNED_BYTE, &texture.data[0])
-   
-    
-    gl.GenerateMipmap(gl.TEXTURE_2D)
-
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-    gl.BindTexture(gl.TEXTURE_2D, 0)
-
-    return texture
 }
 
 load_mesh_as_cube :: proc(texturePath: cstring) -> (mesh: Mesh) {
