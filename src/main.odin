@@ -78,8 +78,6 @@ main :: proc() {
     
 
     cube := graphics.load_mesh_as_cube("textures/a.png")
-    sprite := graphics.new_sprite(graphics.load_texture("textures/a.png"), glm.vec3{2.0, 2.0, 2.0}, glm.vec2{100, 100}, glm.vec3{0, 0, 0}, glm.vec4{1.0, 1.0, 1.0, 1.0})
-    
     
     gl.UseProgram(program)
     uniforms := gl.get_uniforms_from_program(program)
@@ -193,20 +191,12 @@ main :: proc() {
         
         uModel := graphics.get_mesh_model(cube)
         gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
-
+        
         gl.Uniform3f(uniforms["light1.position"].location, lightPos[0], lightPos[1], lightPos[2])
         gl.Uniform3f(uniforms["light1.diffuse"].location, lightDiffuse[0], lightDiffuse[1], lightDiffuse[2])
-
-        
         graphics.draw_mesh(cube)
 
-        uModel = graphics.get_sprite_model(sprite)
-
-        gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
-
-        graphics.draw_sprite(sprite)
         
-
 		
         imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
         when imgui.IMGUI_BRANCH == "docking" {
@@ -219,7 +209,6 @@ main :: proc() {
 		
 		sdl.GL_SwapWindow(window)	
 
-
         if mouseCaptured {
             sdl.CaptureMouse(true)
 
@@ -231,7 +220,6 @@ main :: proc() {
             }    
         }
        
-
         frameTime = sdl.GetTicks() - frameStart
         if frameTime < 1000/maxFPS {
             sdl.Delay(1000/maxFPS - frameTime)

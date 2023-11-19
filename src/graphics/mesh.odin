@@ -4,6 +4,7 @@ import "core:fmt"
 import glm "core:math/linalg/glsl"
 import gl "vendor:OpenGL"
 import stb "vendor:stb/image"
+import gltf "vendor:cgltf"
 
 Vertex :: struct {
     pos: glm.vec3,
@@ -116,4 +117,12 @@ draw_mesh :: proc(mesh: Mesh) {
     gl.DrawElements(gl.TRIANGLES, cast(i32)len(mesh.indices), gl.UNSIGNED_INT, nil)
     gl.BindVertexArray(0)
     gl.BindTexture(gl.TEXTURE_2D, 0)
+}
+
+load_mesh_from_gltf :: proc(modelPath: cstring, texturePath: cstring) -> (mesh: Mesh) {
+    options := gltf.options {
+        gltf.file_type.gltf,
+        0,
+        
+    }
 }
