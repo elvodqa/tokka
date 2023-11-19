@@ -120,9 +120,9 @@ draw_mesh :: proc(mesh: Mesh) {
 }
 
 load_mesh_from_gltf :: proc(modelPath: cstring, texturePath: cstring) -> (mesh: Mesh) {
-    options := gltf.options {
+    /*options := gltf.options {
         gltf.file_type.gltf,
         0,
         
-    }
+    } */
 }
