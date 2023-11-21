@@ -14,9 +14,12 @@ import "../odin-imgui/imgui_impl_opengl3"
 
 
 lightPos: [3]f32 = {1.2, 1.0, 2.0}
-lightDiffuse: [3]f32 = {300, 300, 92}
+lightDiffuse: [3]f32 = {30, 30, 92}
 
 main :: proc() {
+
+    
+   
     WINDOW_WIDTH  :: 1280
 	WINDOW_HEIGHT :: 720
 
@@ -75,10 +78,14 @@ main :: proc() {
         return
     }
     defer gl.DeleteProgram(program)
-    
+    fmt.println("Shaders loaded")
 
-    cube := graphics.load_mesh_as_cube("textures/a.png")
-    
+    //cube := graphics.load_mesh_as_cube("textures/a.png")
+    //saul := graphics.load_mesh_from_obj("models/saulgoodman/saulgoodman.obj", "models/saulgoodman/saulgoodman.png")
+    saul := graphics.load_mesh_via_assimp("models/saulgoodman/saulgoodman.obj")
+    //saul := graphics.load_mesh_from_sexy("models/saulgoodman/emir.obj")
+    saul.pos = glm.vec3{0.0, 0.0, 0.0}
+
     gl.UseProgram(program)
     uniforms := gl.get_uniforms_from_program(program)
 	defer delete(uniforms)
@@ -106,7 +113,7 @@ main :: proc() {
     maxFPS :: 60
 
 
-    sdl.ShowCursor(0)
+    
 
     mouseCaptured := true
     
@@ -173,7 +180,7 @@ main :: proc() {
 
 		imgui.ShowDemoWindow(nil)
 
-        debug_window()
+        debug_window(camera)
 		imgui.Render()
 
         gl.Enable(gl.DEPTH_TEST)
@@ -188,13 +195,17 @@ main :: proc() {
         
         gl.UseProgram(program)
           
-        
-        uModel := graphics.get_mesh_model(cube)
-        gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
-        
         gl.Uniform3f(uniforms["light1.position"].location, lightPos[0], lightPos[1], lightPos[2])
         gl.Uniform3f(uniforms["light1.diffuse"].location, lightDiffuse[0], lightDiffuse[1], lightDiffuse[2])
-        graphics.draw_mesh(cube)
+
+        //uModel := graphics.get_mesh_model(cube)
+        //gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
+        //graphics.draw_mesh(cube)
+
+        saul.scale = glm.vec3{0.01, 0.01, 0.01}
+        uModel := graphics.get_mesh_model(saul)
+        gl.UniformMatrix4fv(uniforms["uModel"].location, 1, false, &uModel[0, 0])
+        graphics.draw_mesh(saul)
 
         
 		
@@ -228,7 +239,7 @@ main :: proc() {
 }
 
 
-debug_window :: proc() {
+debug_window :: proc(camera: graphics.Camera) {
     io := imgui.GetIO()
     flags := imgui.WindowFlags{.NoTitleBar, .NoResize, .NoMove, .NoCollapse, .NoSavedSettings, .NoFocusOnAppearing, .NoBringToFrontOnFocus}
 
@@ -242,6 +253,7 @@ debug_window :: proc() {
     window_pos_pivot.x = 0
     window_pos_pivot.y = 0
 
+    imgui.SetNextWindowSize(imgui.Vec2{300, 0}, .Always)
     imgui.SetNextWindowPos(window_pos, .Always)
     imgui.SetNextWindowBgAlpha(0.35)
 
@@ -249,9 +261,14 @@ debug_window :: proc() {
     imgui.Text("Scene: Demo Scene")
     imgui.Separator()
 
+    imgui.Text("FPS: %d", cast(i32)(1.0/imgui.GetIO().DeltaTime))
+    
+    imgui.Separator()
+
 
     imgui.DragFloat3("Light Position", &lightPos)
     imgui.DragFloat3("Light Diffuse", &lightDiffuse)
+    
     
     imgui.End()
 }

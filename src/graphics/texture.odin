@@ -4,6 +4,7 @@ import "core:fmt"
 import glm "core:math/linalg/glsl"
 import gl "vendor:OpenGL"
 import stb "vendor:stb/image"
+import "core:slice"
 
 Texture :: struct {
     data: [^]u8,
@@ -39,8 +40,16 @@ load_texture :: proc(texturePath: cstring) -> (texture: Texture) {
     gl.GenTextures(1, &texture.gl_handle)
     gl.BindTexture(gl.TEXTURE_2D, texture.gl_handle)
     
-    gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.x, texture.y, 0, gl.RGBA, gl.UNSIGNED_BYTE, &texture.data[0])
-   
+    if texture.channels == 4 {
+        gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.x, texture.y, 0, gl.RGBA, gl.UNSIGNED_BYTE, &texture.data[0])
+    }
+    else if texture.channels == 3 {
+        gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, texture.x, texture.y, 0, gl.RGB, gl.UNSIGNED_BYTE, &texture.data[0])
+    }
+    else {
+        fmt.printf("Unsupported number of channels: %d\n", texture.channels)
+        return texture
+    }
     
     gl.GenerateMipmap(gl.TEXTURE_2D)
 
@@ -72,6 +81,10 @@ new_sprite :: proc(texture: Texture, position: glm.vec3, size: glm.vec2, rotatio
         0, 1, 2,
         2, 3, 0,
     }
+
+    sprite.vertices = slice.clone(sprite.vertices)
+    sprite.indices = slice.clone(sprite.indices)
+
 
     gl.GenVertexArrays(1, &sprite.vao)
     gl.BindVertexArray(sprite.vao)
@@ -110,3 +123,4 @@ draw_sprite :: proc(sprite: Sprite) {
 get_sprite_model :: proc(mesh: Sprite) -> glm.mat4x4 {
     return glm.identity(glm.mat4x4) * glm.mat4Rotate(glm.vec3{1.0, 0.0, 0.0}, mesh.rotation.x) * glm.mat4Rotate(glm.vec3{0.0, 1.0, 0.0}, mesh.rotation.y) * glm.mat4Rotate(glm.vec3{0.0, 0.0, 1.0}, mesh.rotation.z) * glm.mat4Scale(mesh.scale) * glm.mat4Translate(mesh.position)
 }
+
